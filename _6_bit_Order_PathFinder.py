@@ -13,20 +13,22 @@ import pickle
 
 #Таблица истинности
 Bit = ttg.Truths(['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5'])
-
 print(Bit);
-
 rint('next');
+
+
+
 
 
 def FitnessFunction(StateSystem):
 
-    S11_Fit = GetS11_Fit(); # Функция расчета Fitness S11
+    S11_Fit = Get_S11_Fit(); # Функция расчета Fitness S11
+    S22_Fit = Get_S22_Fit(); # 
+    RMS_deg_Fit = Get_RMS_deg_Fit(); # 
+    RMS_dB_Fit = Get_RMS_dB_Fit();
+    P1dB_Fit = Get_P1dB_Fit();
 
-
-
-
-    FitnessValue = S11_Fit + S22_Fit + RMS_deg_Fit + RMS_dB_Fit + RMS_deg_Fit;
+    FitnessValue = S11_Fit + S22_Fit + RMS_deg_Fit + RMS_dB_Fit + RMS_deg_Fit + P1dB_Fit;
 
     return FitnessValue;
 
