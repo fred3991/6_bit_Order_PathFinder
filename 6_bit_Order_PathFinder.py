@@ -9,22 +9,278 @@ import ttg
 import itertools
 import pickle
 import pathlib
+import os
+#returns the names of the files in the directory data as a list
 
 
 
 
 
+##### Подготовильтельный блок
+list_of_files = os.listdir("dsa_almaz_s2p_file"); # директория
+CellPath = os.listdir("dsa_almaz_s2p_file");
+Num_Of_Bits=int(len(list_of_files)/2); # Определили число битов в комбинации;
+#Создаем таблицу истинности
+# Лист битов ['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5']
+BitList = [];
+for i in range(0,Num_Of_Bits,1):
+    BitList.append(str('Bit'+str(i)));
 #Таблица истинности
-Bit = ttg.Truths(['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5'])
-#print(Bit);
-print('next');
+Bit = ttg.Truths(BitList, ascending=True) # развенутная , младший  - бит последний
+###### Таблица Истиности готова;
+print(Bit);
+number_of_states = 2**Num_Of_Bits;  ## число состояний
+#Надо разобрать еще все файлы, 
+Cell_Name_List = [];
+Cell_P1dB_List = [];
+Cell_Truth_List = [];
 
-Bit0 = int(Bit.base_conditions[0][0]); 
+for i in range(len(list_of_files)):
+    Split_String =  list_of_files[i].split("_");
+    Cell_Name_List.append(Split_String[0]);
+    Cell_P1dB_List.append(Split_String[1]);
+    Cell_Truth_List.append(Split_String[2][:1]);
 
-file_name = 'dsa_almaz_s2p_file/0.5_10_0.s2p';
-path = pathlib.Path(file_name)
-print(path.name)  # video.mp4
-print(path.stem)  # video
+class Cell:  # классс ячеек - 2* число бит
+    def __init__(self, CellValue, P1dB, ON_OFF, Network):
+            self.CellValue = CellValue;
+            self.P1dB = P1dB;              
+            self.ON_OFF = ON_OFF; 
+            self.Network = Network;
+   
+def GetCells(CellPath):  # Создание всех ячееек
+ 
+    Cell_Name_List = [];
+    Cell_P1dB_List = [];
+    Cell_Truth_List = [];
+    list_of_files = CellPath;
+
+    for i in range(len(list_of_files)):
+        Split_String =  list_of_files[i].split("_");
+        Cell_Name_List.append(Split_String[0]);
+        Cell_P1dB_List.append(Split_String[1]);
+        Cell_Truth_List.append(Split_String[2][:1]);
+    CellList = [];
+
+    for i in range(len(list_of_files)):
+        CellValue = Cell_Name_List[i];
+        P1dB = Cell_P1dB_List[i];
+        ON_OFF = Cell_Truth_List[i];
+        Network = rf.Network('dsa_almaz_s2p_file/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
+        Temp_Cell = Cell(CellValue, P1dB, ON_OFF, Network);
+        CellList.append(Temp_Cell);
+    return CellList;
+
+#Лист всех ячеек
+List_Cells = GetCells(CellPath);
+############
+UniqueNames = list(set(Cell_Name_List));
+UniqueNames.sort(key=float); ## отсортироваали
+UniqueNames.reverse(); ## развернули, младший бит последний
+print(UniqueNames)
+#########################################
+
+
+
+
+def GetStateData(StateNumber):
+    ##### Надо это обернуть в функцию
+    CellList = []; # лист обьектов ячейки Сell для состояния StateString
+    CascadeList =  []; # лист 2 полюсников rf.Network для состояния, в дальнейшем создания системы и перестановокж
+    # Надо заполнить CascadeList по порядку в соотвествиие с таблицей истинност
+    # Значит по порядку, это перебор по именам UniqueNames
+    StateString =  State; # 000 000
+    #StateString = 1; # 000 001 / младший бит последний
+    #....
+    #StateString = 63; # 111 111
+    for i in range(len(UniqueNames)):
+#    # теперь идем по списку ячеек и выбираем нужные
+        for cell in range(len(List_Cells)):
+            SelectCell = List_Cells[cell];
+            if (SelectCell.CellValue==UniqueNames[i] and SelectCell.ON_OFF==str(int(Bit.base_conditions[StateString][i])) and SelectCell not in CellList):
+                CellList.append(SelectCell)
+                CascadeList.append(SelectCell.Network);
+            else:
+                continue;
+##################### Return состояние - лист каскадов
+    return CellList, CascadeList;
+
+###########################   Проверка вроде работает
+CellList, CascadeList= GetStateData(13);
+for states in range(len(CellList)):
+    print(CellList[states].CellValue+' '+CellList[states].ON_OFF);
+##############################################
+
+
+
+
+class State(self, Number, CellList, CascadeList, 
+                  P1dB,  # точка сжатия для данного состояния при каскадном включении
+                  
+                  S11_dB,  # лист значений
+                  S22_dB,  # /-/-/-/-/-/-/-
+                  S21_dB,  # /-/-/-/-/-/-/-
+                  S21_deg, # /-/-/-/-/-/-/-
+
+                  S11_dB_Max, # максимальное значение из списка частот
+                  S22_dB_Max, # максимальное значение из списка частот
+                  S21_dB_MF, # дБ на центральной частоте
+                  S21_deg_MF): # Градус на центральной частоте
+            
+            self.Number = Number;
+            self.CellList = CellList;
+            self.CascadeList = CascadeList;
+            self.P1dB = P1dB;
+            self.S11_dB = S11_dB;
+            self.S22_dB = S22_dB;
+            self.S21_dB = S21_dB;
+            self.S11_dB_Max = S11_dB_Max;
+            self.S22_dB_Max = S22_dB_Max;
+            self.S21_dB_MF = S21_dB_MF;
+            self.S21_deg_MF = S21_deg_MF;
+
+
+print('шовашыовшаоышвоаышоа');
+#####################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#for cell in range(len(UniqueNames)):
+
+#    SelectCell = rf.Network('dsa_almaz_s2p_file/'+str(UniqueNames[cell])+'_'+List_Cells[]+'_'+str(Bit0)+'.S2P');
+
+#    CascadeList.append(SelectCell);
+
+
+
+
+
+
+
+#for Bits_Num in range(0,Num_Of_Bits,2):
+    
+#    Bit0 = int(Bit.base_conditions[State][0]);     
+
+#    Cascade.append(rf.Network('dsa_almaz_s2p_file/'+str(Cell_Name_List[Bits_Num])+'_'+Cell_P1dB_List[Bits_Num]+'_'+str(Bit0)+'.S2P'))
+
+
+#print(Num_Of_Bits);
+
+
+
+#def GetState(State, Permutaion):  # На вход номер состояния, допустим состояние 0 - s - состояние, p - перестановка
+
+#    Bit0 = int(Bit.base_conditions[State][0]); 
+#    Bit1 = int(Bit.base_conditions[State][1]); 
+#    Bit2 = int(Bit.base_conditions[State][2]); 
+#    Bit3 = int(Bit.base_conditions[State][3]); 
+#    Bit4 = int(Bit.base_conditions[State][4]); 
+#    Bit5 = int(Bit.base_conditions[State][5]); 
+
+#    Cascade = ([rf.Network('dsa_almaz_s2p_file/0.5_'+str(Bit0)+'.S2P'),
+#                                   rf.Network('dsa_almaz_s2p_file/1_'+str(Bit1)+'.S2P'),
+#                                     rf.Network('dsa_almaz_s2p_file/2_'+str(Bit2)+'.S2P'),
+#                                      rf.Network('dsa_almaz_s2p_file/4_'+str(Bit3)+'.S2P'),
+#                                       rf.Network('dsa_almaz_s2p_file/8_'+str(Bit4)+'.S2P'),
+#                                        rf.Network('dsa_almaz_s2p_file/16_'+str(Bit5)+'.S2P')]);
+
+#    List_permutations = list(itertools.permutations(Cascade, 6)); ##720 лист этих каскадов  - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
+
+#    OrderName = List_permutations[p][0].name+' '+List_permutations[p][1].name+' '+List_permutations[p][2].name+' '+List_permutations[p][3].name+' '+List_permutations[p][4].name+' '+List_permutations[p][5].name;
+
+#    CombinationName = OrderName.replace("_1","");
+#    CombinationName = CombinationName.replace("_0","");
+
+#    StateNumber = s; # номер состояния
+#    Network = rf.cascade_list(List_permutations[p]);
+
+#    Frequency = Network.f.tolist();
+#    print('waiting '+str(p));
+
+#    State_S11_dB = [];   ### точки в соотвествии с  List_Frequencies
+#    State_S12_dB = [];
+#    State_S21_dB = [];
+#    State_S22_dB = [];
+#    State_S11_deg = [];
+#    State_S12_deg = [];
+#    State_S21_deg = [];
+#    State_S22_deg = [];
+
+#    for f in range(len(Frequency)):
+
+#        State_S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S12_dB.append(float(Network.s12[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
+
+#        State_S11_deg.append(float(Network.s11[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S12_deg.append(float(Network.s12[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S22_deg.append(float(Network.s22[str(Frequency[f])+'hz'].s_deg[...]))
+#        print('waiting');
+
+#    Diff_S11_S22 = [];
+
+#    for d in range(len(State_S11_dB)):
+#        Diff_S11_S22.append(abs(abs(State_S11_dB[d])-abs(State_S22_dB[d])));
+
+
+
+    
+#    return BitOrder(CombinationName, OrderName, Network, StateNumber, State_S11_dB , State_S12_dB, State_S21_dB, State_S22_dB, State_S11_deg, State_S12_deg, State_S21_deg, State_S22_deg, Frequency , Diff_S11_S22)        #, MeanValue_S11, MeanValue_S22
+
+
+
+
+
+
+
+
+
+#file_name = 'dsa_almaz_s2p_file/0.5_10_0.s2p';
+#path = pathlib.Path(file_name);
+#file = path.name;
+#File_z =path.stem  # 0.5_10_0
+#print('next');
+#print(File_z);
+#File_z = File_z.replace("_0","");
+#print(File_z);
+
+
+#Cascade = rf.Network('dsa_almaz_s2p_file/0.5_'+str(P1dB)+'_'++str(Bit0)+'.S2P');
 
 
 
@@ -90,69 +346,7 @@ print(path.stem)  # video
 
 #print(Bit);
 
-## сама функция в цикле по перестановкам и по состояниям
-#def GetBitOrder(s, p):  # На вход номер состояния, допустим состояние 0 - s - состояние, p - перестановка
-
-#    Bit0 = int(Bit.base_conditions[s][0]); 
-#    Bit1 = int(Bit.base_conditions[s][1]); 
-#    Bit2 = int(Bit.base_conditions[s][2]); 
-#    Bit3 = int(Bit.base_conditions[s][3]); 
-#    Bit4 = int(Bit.base_conditions[s][4]); 
-#    Bit5 = int(Bit.base_conditions[s][5]); 
-
-#    Cascade = ([rf.Network('dsa_almaz_s2p_file/0.5_'+str(Bit0)+'.S2P'),
-#                                   rf.Network('dsa_almaz_s2p_file/1_'+str(Bit1)+'.S2P'),
-#                                     rf.Network('dsa_almaz_s2p_file/2_'+str(Bit2)+'.S2P'),
-#                                      rf.Network('dsa_almaz_s2p_file/4_'+str(Bit3)+'.S2P'),
-#                                       rf.Network('dsa_almaz_s2p_file/8_'+str(Bit4)+'.S2P'),
-#                                        rf.Network('dsa_almaz_s2p_file/16_'+str(Bit5)+'.S2P')]);
-
-#    List_permutations = list(itertools.permutations(Cascade, 6)); ##720 лист этих каскадов  - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
-
-#    OrderName = List_permutations[p][0].name+' '+List_permutations[p][1].name+' '+List_permutations[p][2].name+' '+List_permutations[p][3].name+' '+List_permutations[p][4].name+' '+List_permutations[p][5].name;
-
-#    CombinationName = OrderName.replace("_1","");
-#    CombinationName = CombinationName.replace("_0","");
-
-#    StateNumber = s; # номер состояния
-#    Network = rf.cascade_list(List_permutations[p]);
-
-#    Frequency = Network.f.tolist();
-#    print('waiting '+str(p));
-
-#    State_S11_dB = [];   ### точки в соотвествии с  List_Frequencies
-#    State_S12_dB = [];
-#    State_S21_dB = [];
-#    State_S22_dB = [];
-#    State_S11_deg = [];
-#    State_S12_deg = [];
-#    State_S21_deg = [];
-#    State_S22_deg = [];
-
-#    for f in range(len(Frequency)):
-
-#        State_S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
-#        State_S12_dB.append(float(Network.s12[str(Frequency[f])+'hz'].s_db[...]));
-#        State_S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
-#        State_S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
-
-#        State_S11_deg.append(float(Network.s11[str(Frequency[f])+'hz'].s_deg[...]))
-#        State_S12_deg.append(float(Network.s12[str(Frequency[f])+'hz'].s_deg[...]))
-#        State_S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
-#        State_S22_deg.append(float(Network.s22[str(Frequency[f])+'hz'].s_deg[...]))
-#        print('waiting');
-
-#    Diff_S11_S22 = [];
-
-#    for d in range(len(State_S11_dB)):
-#        Diff_S11_S22.append(abs(abs(State_S11_dB[d])-abs(State_S22_dB[d])));
-
-
-
-    
-#    return BitOrder(CombinationName, OrderName, Network, StateNumber, State_S11_dB , State_S12_dB, State_S21_dB, State_S22_dB, State_S11_deg, State_S12_deg, State_S21_deg, State_S22_deg, Frequency , Diff_S11_S22)        #, MeanValue_S11, MeanValue_S22
-
-
+# сама функция в цикле по перестановкам и по состояниям
 
 
 
