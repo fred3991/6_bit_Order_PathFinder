@@ -140,7 +140,7 @@ class State(self, Number, CellList, CascadeList,
             self.S21_deg_MF = S21_deg_MF;
 
 
-print('шовашыовшаоышвоаышоа');
+print('шовашыовшаоышвоа   ышоа');
 #####################
 
 
