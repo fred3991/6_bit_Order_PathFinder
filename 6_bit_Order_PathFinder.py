@@ -8,27 +8,23 @@ import toolz
 import ttg
 import itertools
 import pickle
+import pathlib
+
+
 
 
 
 #Таблица истинности
 Bit = ttg.Truths(['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5'])
+#print(Bit);
+print('next');
 
-print(Bit);
+Bit0 = int(Bit.base_conditions[0][0]); 
 
-rint('next');
-
-
-def FitnessFunction(StateSystem):
-
-    S11_Fit = GetS11_Fit(); # Функция расчета Fitness S11
-
-
-
-
-    FitnessValue = S11_Fit + S22_Fit + RMS_deg_Fit + RMS_dB_Fit + RMS_deg_Fit;
-
-    return FitnessValue;
+file_name = 'dsa_almaz_s2p_file/0.5_10_0.s2p';
+path = pathlib.Path(file_name)
+print(path.name)  # video.mp4
+print(path.stem)  # video
 
 
 
@@ -36,241 +32,269 @@ def FitnessFunction(StateSystem):
 
 
 
-class BitOrder:  # 720 штук обьектов
-    def __init__(self, CombinationName, OrderName, Network, 
-                 StateNumber, State_S11_dB , State_S12_dB, 
-                 State_S21_dB, State_S22_dB, State_S11_deg, 
-                 State_S12_deg, State_S21_deg, 
-                 State_S22_deg, Frequency, Diff_S11_S22):  # OrderNetwork,
-            #,
-                # MeanValue_S11, MeanValue_S22
-            self.CombinationName = CombinationName;
-            self.OrderName = OrderName;              # Имя порядка например и вкл или выкл состояние  ('05(0)_1(1)_2(0)_4(1)_8(0)_16(1)')
-            self.StateNumber = StateNumber;          # номер состояния, шоб не терять на всякий случай
-            self.Network = Network;       # Матрица S Параметров для этого порядка для данного состояния, матрица состояния #Матрица S параметров     
+
+#def FitnessFunction(StateSystem):
+
+#    S11_Fit = Get_S11_Fit(); # Функция расчета Fitness S11
+                               
+#    S22_Fit = Get_S22_Fit(); #
+
+#    RMS_deg_Fit = Get_RMS_deg_Fit();
+  
+#    RMS_dB_Fit = Get_RMS_dB_Fit();
+
+#    P1dB_Fit = Get_P1dB_Fit();
+
+#    FitnessValue = S11_Fit + S22_Fit + RMS_deg_Fit + RMS_dB_Fit + RMS_deg_Fit + P1dB_Fit;
+
+#    return FitnessValue;
+
+
+
+
+
+
+
+
+
+
+
+
+#class BitOrder:  # 720 штук обьектов
+#    def __init__(self, CombinationName, OrderName, Network, 
+#                 StateNumber, State_S11_dB , State_S12_dB, 
+#                 State_S21_dB, State_S22_dB, State_S11_deg, 
+#                 State_S12_deg, State_S21_deg, 
+#                 State_S22_deg, Frequency, Diff_S11_S22):  # OrderNetwork,
+#            #,
+#                # MeanValue_S11, MeanValue_S22
+#            self.CombinationName = CombinationName;
+#            self.OrderName = OrderName;              # Имя порядка например и вкл или выкл состояние  ('05(0)_1(1)_2(0)_4(1)_8(0)_16(1)')
+#            self.StateNumber = StateNumber;          # номер состояния, шоб не терять на всякий случай
+#            self.Network = Network;       # Матрица S Параметров для этого порядка для данного состояния, матрица состояния #Матрица S параметров     
                 
-            self.State_S11_dB = State_S11_dB;   ### точки в соотвествии с  List_Frequencies
-            self.State_S12_dB = State_S12_dB;
-            self.State_S21_dB = State_S21_dB;
-            self.State_S22_dB = State_S22_dB;
+#            self.State_S11_dB = State_S11_dB;   ### точки в соотвествии с  List_Frequencies
+#            self.State_S12_dB = State_S12_dB;
+#            self.State_S21_dB = State_S21_dB;
+#            self.State_S22_dB = State_S22_dB;
 
-            self.State_S11_deg = State_S11_deg;
-            self.State_S12_deg = State_S12_deg;
-            self.State_S21_deg = State_S21_deg;
-            self.State_S22_deg = State_S22_deg;
-            self.Frequency = Frequency;
-            self.Diff_S11_S22 = Diff_S11_S22;
+#            self.State_S11_deg = State_S11_deg;
+#            self.State_S12_deg = State_S12_deg;
+#            self.State_S21_deg = State_S21_deg;
+#            self.State_S22_deg = State_S22_deg;
+#            self.Frequency = Frequency;
+#            self.Diff_S11_S22 = Diff_S11_S22;
 
-# таблица истинности;
-Bit = ttg.Truths(['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5'])
+## таблица истинности;
+#Bit = ttg.Truths(['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5'])
 
-print(Bit);
+#print(Bit);
 
-# сама функция в цикле по перестановкам и по состояниям
-def GetBitOrder(s, p):  # На вход номер состояния, допустим состояние 0 - s - состояние, p - перестановка
+## сама функция в цикле по перестановкам и по состояниям
+#def GetBitOrder(s, p):  # На вход номер состояния, допустим состояние 0 - s - состояние, p - перестановка
 
-    Bit0 = int(Bit.base_conditions[s][0]); 
-    Bit1 = int(Bit.base_conditions[s][1]); 
-    Bit2 = int(Bit.base_conditions[s][2]); 
-    Bit3 = int(Bit.base_conditions[s][3]); 
-    Bit4 = int(Bit.base_conditions[s][4]); 
-    Bit5 = int(Bit.base_conditions[s][5]); 
+#    Bit0 = int(Bit.base_conditions[s][0]); 
+#    Bit1 = int(Bit.base_conditions[s][1]); 
+#    Bit2 = int(Bit.base_conditions[s][2]); 
+#    Bit3 = int(Bit.base_conditions[s][3]); 
+#    Bit4 = int(Bit.base_conditions[s][4]); 
+#    Bit5 = int(Bit.base_conditions[s][5]); 
 
-    Cascade = ([rf.Network('dsa_almaz_s2p_file/0.5_'+str(Bit0)+'.S2P'),
-                                   rf.Network('dsa_almaz_s2p_file/1_'+str(Bit1)+'.S2P'),
-                                     rf.Network('dsa_almaz_s2p_file/2_'+str(Bit2)+'.S2P'),
-                                      rf.Network('dsa_almaz_s2p_file/4_'+str(Bit3)+'.S2P'),
-                                       rf.Network('dsa_almaz_s2p_file/8_'+str(Bit4)+'.S2P'),
-                                        rf.Network('dsa_almaz_s2p_file/16_'+str(Bit5)+'.S2P')]);
+#    Cascade = ([rf.Network('dsa_almaz_s2p_file/0.5_'+str(Bit0)+'.S2P'),
+#                                   rf.Network('dsa_almaz_s2p_file/1_'+str(Bit1)+'.S2P'),
+#                                     rf.Network('dsa_almaz_s2p_file/2_'+str(Bit2)+'.S2P'),
+#                                      rf.Network('dsa_almaz_s2p_file/4_'+str(Bit3)+'.S2P'),
+#                                       rf.Network('dsa_almaz_s2p_file/8_'+str(Bit4)+'.S2P'),
+#                                        rf.Network('dsa_almaz_s2p_file/16_'+str(Bit5)+'.S2P')]);
 
-    List_permutations = list(itertools.permutations(Cascade, 6)); ##720 лист этих каскадов  - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
+#    List_permutations = list(itertools.permutations(Cascade, 6)); ##720 лист этих каскадов  - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
 
-    OrderName = List_permutations[p][0].name+' '+List_permutations[p][1].name+' '+List_permutations[p][2].name+' '+List_permutations[p][3].name+' '+List_permutations[p][4].name+' '+List_permutations[p][5].name;
+#    OrderName = List_permutations[p][0].name+' '+List_permutations[p][1].name+' '+List_permutations[p][2].name+' '+List_permutations[p][3].name+' '+List_permutations[p][4].name+' '+List_permutations[p][5].name;
 
-    CombinationName = OrderName.replace("_1","");
-    CombinationName = CombinationName.replace("_0","");
+#    CombinationName = OrderName.replace("_1","");
+#    CombinationName = CombinationName.replace("_0","");
 
-    StateNumber = s; # номер состояния
-    Network = rf.cascade_list(List_permutations[p]);
+#    StateNumber = s; # номер состояния
+#    Network = rf.cascade_list(List_permutations[p]);
 
-    Frequency = Network.f.tolist();
-    print('waiting '+str(p));
+#    Frequency = Network.f.tolist();
+#    print('waiting '+str(p));
 
-    State_S11_dB = [];   ### точки в соотвествии с  List_Frequencies
-    State_S12_dB = [];
-    State_S21_dB = [];
-    State_S22_dB = [];
-    State_S11_deg = [];
-    State_S12_deg = [];
-    State_S21_deg = [];
-    State_S22_deg = [];
+#    State_S11_dB = [];   ### точки в соотвествии с  List_Frequencies
+#    State_S12_dB = [];
+#    State_S21_dB = [];
+#    State_S22_dB = [];
+#    State_S11_deg = [];
+#    State_S12_deg = [];
+#    State_S21_deg = [];
+#    State_S22_deg = [];
 
-    for f in range(len(Frequency)):
+#    for f in range(len(Frequency)):
 
-        State_S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
-        State_S12_dB.append(float(Network.s12[str(Frequency[f])+'hz'].s_db[...]));
-        State_S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
-        State_S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S12_dB.append(float(Network.s12[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
+#        State_S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
 
-        State_S11_deg.append(float(Network.s11[str(Frequency[f])+'hz'].s_deg[...]))
-        State_S12_deg.append(float(Network.s12[str(Frequency[f])+'hz'].s_deg[...]))
-        State_S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
-        State_S22_deg.append(float(Network.s22[str(Frequency[f])+'hz'].s_deg[...]))
-        print('waiting');
+#        State_S11_deg.append(float(Network.s11[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S12_deg.append(float(Network.s12[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
+#        State_S22_deg.append(float(Network.s22[str(Frequency[f])+'hz'].s_deg[...]))
+#        print('waiting');
 
-    Diff_S11_S22 = [];
+#    Diff_S11_S22 = [];
 
-    for d in range(len(State_S11_dB)):
-        Diff_S11_S22.append(abs(abs(State_S11_dB[d])-abs(State_S22_dB[d])));
+#    for d in range(len(State_S11_dB)):
+#        Diff_S11_S22.append(abs(abs(State_S11_dB[d])-abs(State_S22_dB[d])));
 
 
 
     
-    return BitOrder(CombinationName, OrderName, Network, StateNumber, State_S11_dB , State_S12_dB, State_S21_dB, State_S22_dB, State_S11_deg, State_S12_deg, State_S21_deg, State_S22_deg, Frequency , Diff_S11_S22)        #, MeanValue_S11, MeanValue_S22
+#    return BitOrder(CombinationName, OrderName, Network, StateNumber, State_S11_dB , State_S12_dB, State_S21_dB, State_S22_dB, State_S11_deg, State_S12_deg, State_S21_deg, State_S22_deg, Frequency , Diff_S11_S22)        #, MeanValue_S11, MeanValue_S22
 
 
 
 
 
-class PrimaryState:  # 64 штуки
-    def __init__(self,BitOrderList, StateNumber, PrimaryNetwork, Best_Network_List, Solution_Order_List):  # OrderNetwork,
+#class PrimaryState:  # 64 штуки
+#    def __init__(self,BitOrderList, StateNumber, PrimaryNetwork, Best_Network_List, Solution_Order_List):  # OrderNetwork,
             
-            self.BitOrderList = BitOrderList;  #720 порядков; обьектов BitOrder // ТОП по условию
-            self.StateNumber = StateNumber;          # номер состояния, обязательно;
-            self.PrimaryNetwork = PrimaryNetwork;
-            self.Best_Network_List = Best_Network_List;
-            self.Solution_Order_List = Solution_Order_List;
+#            self.BitOrderList = BitOrderList;  #720 порядков; обьектов BitOrder // ТОП по условию
+#            self.StateNumber = StateNumber;          # номер состояния, обязательно;
+#            self.PrimaryNetwork = PrimaryNetwork;
+#            self.Best_Network_List = Best_Network_List;
+#            self.Solution_Order_List = Solution_Order_List;
        
 
 
 
 
-def GetPrimaryState(State): # получаю состояние
+#def GetPrimaryState(State): # получаю состояние
 
-    num = 720;
+#    num = 720;
 
-    #pickle.dump(BitOrderList, open('BitOrderList_State_'+str(State)+'.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
+#    #pickle.dump(BitOrderList, open('BitOrderList_State_'+str(State)+'.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
 
-    BitOrderList =  pickle.load(open('BitOrderList_State_'+str(State)+'.pkl', 'rb'));
+#    BitOrderList =  pickle.load(open('BitOrderList_State_'+str(State)+'.pkl', 'rb'));
 
-    Temp_List = [];
+#    Temp_List = [];
 
-    Limit = -9.4;
+#    Limit = -9.4;
 
-    for i in range(len(BitOrderList)):
-        if ((BitOrderList[i].State_S11_dB[8]<Limit) and (BitOrderList[i].State_S22_dB[8]<Limit)):
-            Temp_List.append(BitOrderList[i]);
-            print('add good');
-        else:
-            print('delete bad');
-            continue;
+#    for i in range(len(BitOrderList)):
+#        if ((BitOrderList[i].State_S11_dB[8]<Limit) and (BitOrderList[i].State_S22_dB[8]<Limit)):
+#            Temp_List.append(BitOrderList[i]);
+#            print('add good');
+#        else:
+#            print('delete bad');
+#            continue;
 
-    Best_Network_List = Temp_List;
+#    Best_Network_List = Temp_List;
 
-    #Best_Network_List = sorted(BitOrderList, key = lambda BitOrder: BitOrder.Diff_S11_S22);
+#    #Best_Network_List = sorted(BitOrderList, key = lambda BitOrder: BitOrder.Diff_S11_S22);
 
-    Best_Network_List = sorted(Best_Network_List, key = lambda BitOrder: BitOrder.CombinationName);
+#    Best_Network_List = sorted(Best_Network_List, key = lambda BitOrder: BitOrder.CombinationName);
 
-    PrimaryNetwork = Best_Network_List[0].Network; # это наверное зря
+#    PrimaryNetwork = Best_Network_List[0].Network; # это наверное зря
 
-    StateNumber = State;
+#    StateNumber = State;
 
-    Solution_Order_List = [];
+#    Solution_Order_List = [];
 
-    for i in range(len(Best_Network_List)):
-        Solution_Order_List.append(Best_Network_List[i].CombinationName);
-
-
-    return PrimaryState(BitOrderList, StateNumber, PrimaryNetwork, Best_Network_List, Solution_Order_List)
+#    for i in range(len(Best_Network_List)):
+#        Solution_Order_List.append(Best_Network_List[i].CombinationName);
 
 
-
-StateSystem_List = [];
-for State in range(0,64,1):
-    StateSystem_List.append(GetPrimaryState(State));
-    print(State);
+#    return PrimaryState(BitOrderList, StateNumber, PrimaryNetwork, Best_Network_List, Solution_Order_List)
 
 
 
+#StateSystem_List = [];
+#for State in range(0,64,1):
+#    StateSystem_List.append(GetPrimaryState(State));
+#    print(State);
 
-pickle.dump(StateSystem_List, open('StateSystem_List_ALL_11.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
 
 
-Solution  = [];
+
+#pickle.dump(StateSystem_List, open('StateSystem_List_ALL_11.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
 
 
+#Solution  = [];
 
 
 
 
 
-Solution = (list(set(StateSystem_List[0].Solution_Order_List)   ####))))))))))))))))))))))))))))))))
-                 & set(StateSystem_List[1].Solution_Order_List) 
-                 & set(StateSystem_List[2].Solution_Order_List) 
-                 & set(StateSystem_List[3].Solution_Order_List) 
-                 & set(StateSystem_List[4].Solution_Order_List) 
-                 & set(StateSystem_List[5].Solution_Order_List) 
-                 & set(StateSystem_List[6].Solution_Order_List) 
-                 & set(StateSystem_List[7].Solution_Order_List) 
-          & set(StateSystem_List[8].Solution_Order_List) 
-          & set(StateSystem_List[9].Solution_Order_List) 
-          & set(StateSystem_List[10].Solution_Order_List) 
-          & set(StateSystem_List[11].Solution_Order_List) 
-          & set(StateSystem_List[12].Solution_Order_List) 
-          & set(StateSystem_List[13].Solution_Order_List) 
-          & set(StateSystem_List[14].Solution_Order_List) 
-          & set(StateSystem_List[15].Solution_Order_List) 
-          & set(StateSystem_List[16].Solution_Order_List) 
-          & set(StateSystem_List[17].Solution_Order_List)
-          & set(StateSystem_List[18].Solution_Order_List) 
-          & set(StateSystem_List[19].Solution_Order_List) 
-          & set(StateSystem_List[20].Solution_Order_List)
-          & set(StateSystem_List[21].Solution_Order_List)
-           & set(StateSystem_List[22].Solution_Order_List)
-            & set(StateSystem_List[23].Solution_Order_List)
-             & set(StateSystem_List[24].Solution_Order_List)
-             & set(StateSystem_List[25].Solution_Order_List)
-              & set(StateSystem_List[26].Solution_Order_List)
-               & set(StateSystem_List[27].Solution_Order_List)
-                & set(StateSystem_List[28].Solution_Order_List)
-                 & set(StateSystem_List[29].Solution_Order_List)
-                  & set(StateSystem_List[30].Solution_Order_List)
-                   & set(StateSystem_List[31].Solution_Order_List)
-                    & set(StateSystem_List[32].Solution_Order_List)
-                     & set(StateSystem_List[33].Solution_Order_List)
-                      & set(StateSystem_List[34].Solution_Order_List)
-                       & set(StateSystem_List[35].Solution_Order_List) 
-                        & set(StateSystem_List[36].Solution_Order_List) 
-                         & set(StateSystem_List[37].Solution_Order_List) 
-                          & set(StateSystem_List[38].Solution_Order_List) 
-                           & set(StateSystem_List[39].Solution_Order_List) 
-                            & set(StateSystem_List[40].Solution_Order_List) 
-                             & set(StateSystem_List[41].Solution_Order_List) 
-                              & set(StateSystem_List[42].Solution_Order_List) 
-                               & set(StateSystem_List[43].Solution_Order_List) 
-                                & set(StateSystem_List[44].Solution_Order_List) 
-                                 & set(StateSystem_List[45].Solution_Order_List) 
-                                  & set(StateSystem_List[46].Solution_Order_List) 
-                                   & set(StateSystem_List[47].Solution_Order_List)
-                                    & set(StateSystem_List[48].Solution_Order_List)
-                                     & set(StateSystem_List[49].Solution_Order_List)
-                                      & set(StateSystem_List[50].Solution_Order_List)
-                                       & set(StateSystem_List[51].Solution_Order_List)
-                                        & set(StateSystem_List[52].Solution_Order_List)
-                                         & set(StateSystem_List[53].Solution_Order_List)
-                                          & set(StateSystem_List[54].Solution_Order_List)
-                                           & set(StateSystem_List[55].Solution_Order_List)
-                                            & set(StateSystem_List[56].Solution_Order_List)
-                                             & set(StateSystem_List[57].Solution_Order_List)
-                                             & set(StateSystem_List[58].Solution_Order_List)
-                                             & set(StateSystem_List[59].Solution_Order_List)
-                                             & set(StateSystem_List[60].Solution_Order_List)
-                                             & set(StateSystem_List[61].Solution_Order_List)
-                                             & set(StateSystem_List[62].Solution_Order_List)
-                                             & set(StateSystem_List[63].Solution_Order_List)
+
+
+#Solution = (list(set(StateSystem_List[0].Solution_Order_List)   ####))))))))))))))))))))))))))))))))
+#                 & set(StateSystem_List[1].Solution_Order_List) 
+#                 & set(StateSystem_List[2].Solution_Order_List) 
+#                 & set(StateSystem_List[3].Solution_Order_List) 
+#                 & set(StateSystem_List[4].Solution_Order_List) 
+#                 & set(StateSystem_List[5].Solution_Order_List) 
+#                 & set(StateSystem_List[6].Solution_Order_List) 
+#                 & set(StateSystem_List[7].Solution_Order_List) 
+#          & set(StateSystem_List[8].Solution_Order_List) 
+#          & set(StateSystem_List[9].Solution_Order_List) 
+#          & set(StateSystem_List[10].Solution_Order_List) 
+#          & set(StateSystem_List[11].Solution_Order_List) 
+#          & set(StateSystem_List[12].Solution_Order_List) 
+#          & set(StateSystem_List[13].Solution_Order_List) 
+#          & set(StateSystem_List[14].Solution_Order_List) 
+#          & set(StateSystem_List[15].Solution_Order_List) 
+#          & set(StateSystem_List[16].Solution_Order_List) 
+#          & set(StateSystem_List[17].Solution_Order_List)
+#          & set(StateSystem_List[18].Solution_Order_List) 
+#          & set(StateSystem_List[19].Solution_Order_List) 
+#          & set(StateSystem_List[20].Solution_Order_List)
+#          & set(StateSystem_List[21].Solution_Order_List)
+#           & set(StateSystem_List[22].Solution_Order_List)
+#            & set(StateSystem_List[23].Solution_Order_List)
+#             & set(StateSystem_List[24].Solution_Order_List)
+#             & set(StateSystem_List[25].Solution_Order_List)
+#              & set(StateSystem_List[26].Solution_Order_List)
+#               & set(StateSystem_List[27].Solution_Order_List)
+#                & set(StateSystem_List[28].Solution_Order_List)
+#                 & set(StateSystem_List[29].Solution_Order_List)
+#                  & set(StateSystem_List[30].Solution_Order_List)
+#                   & set(StateSystem_List[31].Solution_Order_List)
+#                    & set(StateSystem_List[32].Solution_Order_List)
+#                     & set(StateSystem_List[33].Solution_Order_List)
+#                      & set(StateSystem_List[34].Solution_Order_List)
+#                       & set(StateSystem_List[35].Solution_Order_List) 
+#                        & set(StateSystem_List[36].Solution_Order_List) 
+#                         & set(StateSystem_List[37].Solution_Order_List) 
+#                          & set(StateSystem_List[38].Solution_Order_List) 
+#                           & set(StateSystem_List[39].Solution_Order_List) 
+#                            & set(StateSystem_List[40].Solution_Order_List) 
+#                             & set(StateSystem_List[41].Solution_Order_List) 
+#                              & set(StateSystem_List[42].Solution_Order_List) 
+#                               & set(StateSystem_List[43].Solution_Order_List) 
+#                                & set(StateSystem_List[44].Solution_Order_List) 
+#                                 & set(StateSystem_List[45].Solution_Order_List) 
+#                                  & set(StateSystem_List[46].Solution_Order_List) 
+#                                   & set(StateSystem_List[47].Solution_Order_List)
+#                                    & set(StateSystem_List[48].Solution_Order_List)
+#                                     & set(StateSystem_List[49].Solution_Order_List)
+#                                      & set(StateSystem_List[50].Solution_Order_List)
+#                                       & set(StateSystem_List[51].Solution_Order_List)
+#                                        & set(StateSystem_List[52].Solution_Order_List)
+#                                         & set(StateSystem_List[53].Solution_Order_List)
+#                                          & set(StateSystem_List[54].Solution_Order_List)
+#                                           & set(StateSystem_List[55].Solution_Order_List)
+#                                            & set(StateSystem_List[56].Solution_Order_List)
+#                                             & set(StateSystem_List[57].Solution_Order_List)
+#                                             & set(StateSystem_List[58].Solution_Order_List)
+#                                             & set(StateSystem_List[59].Solution_Order_List)
+#                                             & set(StateSystem_List[60].Solution_Order_List)
+#                                             & set(StateSystem_List[61].Solution_Order_List)
+#                                             & set(StateSystem_List[62].Solution_Order_List)
+#                                             & set(StateSystem_List[63].Solution_Order_List)
                        
-                       ));
-print(Solution);
+#                       ));
+#print(Solution);
 
 
 

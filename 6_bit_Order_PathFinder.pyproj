@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9c3fd588-1b88-49f4-8d26-ae85625c6bac</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>_6_bit_Order_PathFinder.py</StartupFile>
+    <StartupFile>6_bit_Order_PathFinder.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="_6_bit_Order_PathFinder.py" />
+    <Compile Include="6_bit_Order_PathFinder.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
