@@ -41,12 +41,17 @@ for i in range(len(list_of_files)):
     Cell_P1dB_List.append(Split_String[1]);
     Cell_Truth_List.append(Split_String[2][:1]);
 
+
+
+
+
 class Cell:  # классс ячеек - 2* число бит
-    def __init__(self, CellValue, P1dB, ON_OFF, Network):
+    def __init__(self, CellValue, P1dB, ON_OFF, Network, Cell_S21_MF_dB):
             self.CellValue = CellValue;
             self.P1dB = P1dB;              
             self.ON_OFF = ON_OFF; 
-            self.Network = Network;
+            self.Network = Network;###########################
+            self.Cell_S21_MF_dB = Cell_S21_MF_dB;
    
 def GetCells(CellPath):  # Создание всех ячееек
  
@@ -67,7 +72,15 @@ def GetCells(CellPath):  # Создание всех ячееек
         P1dB = Cell_P1dB_List[i];
         ON_OFF = Cell_Truth_List[i];
         Network = rf.Network('dsa_almaz_s2p_file/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
-        Temp_Cell = Cell(CellValue, P1dB, ON_OFF, Network);
+
+        Frequency = Network.f.tolist(); # лист частот
+        S21_dB = [];
+        for f in range(len(Frequency)):    
+            S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));         
+        MF = math.ceil(len(Frequency)/2);  # центральная ччастотта
+        Cell_S21_MF_dB  = S21_dB[MF]; # выбор индекса на центральной частотте
+
+        Temp_Cell = Cell(CellValue, P1dB, ON_OFF, Network, Cell_S21_MF_dB);
         CellList.append(Temp_Cell);
     return CellList;
 
@@ -89,7 +102,7 @@ def GetStateData(StateNumber):
     CascadeList =  []; # лист 2 полюсников rf.Network для состояния, в дальнейшем создания системы и перестановокж
     # Надо заполнить CascadeList по порядку в соотвествиие с таблицей истинност
     # Значит по порядку, это перебор по именам UniqueNames
-    StateString =  State; # 000 000
+    StateString =  StateNumber; # 000 000
     #StateString = 1; # 000 001 / младший бит последний
     #....
     #StateString = 63; # 111 111
@@ -105,16 +118,122 @@ def GetStateData(StateNumber):
 ##################### Return состояние - лист каскадов
     return CellList, CascadeList;
 
+
 ###########################   Проверка вроде работает
 CellList, CascadeList= GetStateData(13);
 for states in range(len(CellList)):
     print(CellList[states].CellValue+' '+CellList[states].ON_OFF);
 ##############################################
 
+class State:
+     def __init__(self, Number, CellList, CascadeList, 
+                  P1dB,  # точка сжатия для данного состояния при каскадном включении
+                  
+                  S11_dB,  # лист значений
+                  S22_dB,  # /-/-/-/-/-/-/-
+                  S21_dB,  # /-/-/-/-/-/-/-
+                  S21_deg, # /-/-/-/-/-/-/-
 
+                  S11_dB_Max, # максимальное значение из списка частот
+                  S22_dB_Max, # максимальное значение из списка частот
 
+                  S21_dB_MF, # дБ на центральной частоте
+                  S21_deg_MF, # Градус на центральной частоте
+                  CombinationOrder): 
+            
+            self.Number = Number;
+            self.CellList = CellList;
+            self.CascadeList = CascadeList;
+            self.P1dB = P1dB;
 
-class State(self, Number, CellList, CascadeList, 
+            self.S11_dB = S11_dB;
+            self.S22_dB = S22_dB;
+            self.S21_dB = S21_dB;
+            self.S21_deg = S21_deg;
+
+            self.S11_dB_Max = S11_dB_Max;
+            self.S22_dB_Max = S22_dB_Max;
+
+            self.S21_dB_MF = S21_dB_MF;
+            self.S21_deg_MF = S21_deg_MF;
+            self.CombinationOrder = CombinationOrder; #имя комбинации
+
+def GetState(StateNumber, PermutaionNumber):
+
+    CellList, CascadeList= GetStateData(StateNumber);  ## получили данные для состояния
+
+    Cascade = CascadeList;
+
+    Cascade_permutations = list(itertools.permutations(Cascade, len(BitList))); # 720 лист этих каскадов - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
+    Cell_Permutaitions = list(itertools.permutations(CellList, len(BitList)))  # 720 состояний ячеек, отсюда можно взять последовательность
+
+    CombinationOrder = [];
+    for i in range(len(CellList)):
+        CombinationOrder.append(Cell_Permutaitions[PermutaionNumber][i].CellValue);
+ 
+
+    Number = StateNumber; # номер состояния
+    Network = rf.cascade_list(Cascade_permutations[PermutaionNumber]);  # Берем все данные оттуда из собранного каскада
+    
+    Frequency = Network.f.tolist(); # лист частот
+
+    S11_dB = [];   ### точки в по частотам
+    S22_dB = [];
+    S21_dB = [];
+    S21_deg = [];
+
+    for f in range(len(Frequency)):
+
+        S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
+        S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
+        S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
+        S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
+
+        print('waiting');
+    
+    S11_dB_Max = max(S11_dB);
+    S22_dB_Max = max(S22_dB);
+    MF = math.ceil(len(Frequency)/2);  # центральная ччастотта
+    S21_dB_MF  = S21_dB[MF]; # выбор индекса на центральной частотте
+    S21_deg_MF = S21_deg[MF]
+
+    P1dB_Value_List = [];  # лист значений для данной комбинации
+    S21_Value_List  = []; 
+
+    for c in range(len(CellList)):
+        P1dB_Value_List.append(CellList[c].P1dB);
+        S21_Value_List.append(CellList[c].Cell_S21_MF_dB);
+    
+    #Cчитаем тотал P1dB
+    #Переводим п1дб и s21 в разы;
+    P1dB_Value_List_R = [];
+    S21_Value_List_R = [];
+    for i in range(len(P1dB_Value_List)):
+        P1dB_Value_List_R.append(10**(float(P1dB_Value_List[i])/10));
+        S21_Value_List_R.append(10**(float(S21_Value_List[i])/10));
+    ###Дальше считаем
+    #Делаем цикл по значением в листе P1dB_Value_List_R а для S21_Value_List_R -1
+    SummList = [];
+    GainFactArray = [];
+    first = 1/float(P1dB_Value_List_R[0]); # Всегда
+    
+
+    GainMult = float(1); # временная переменная
+    
+    for x in range(len(S21_Value_List_R)-1):
+        Gain = float(S21_Value_List_R[x]); #Cейчас
+        GainMult = GainMult*Gain;       # следующая
+        GainFactArray.append(GainMult);
+        
+    SuperSumma = 0;
+    for cascade in range(1,len(P1dB_Value_List)-1):
+        SuperSumma = SuperSumma + (GainFactArray[cascade-1]/P1dB_Value_List_R[cascade]);
+
+    P1dBTotal = (SuperSumma+first)**(-1);
+    P1dBTotal = 10*math.log10(P1dBTotal);
+    P1dB = P1dBTotal;
+    
+    return State(Number, CellList, CascadeList, 
                   P1dB,  # точка сжатия для данного состояния при каскадном включении
                   
                   S11_dB,  # лист значений
@@ -125,19 +244,12 @@ class State(self, Number, CellList, CascadeList,
                   S11_dB_Max, # максимальное значение из списка частот
                   S22_dB_Max, # максимальное значение из списка частот
                   S21_dB_MF, # дБ на центральной частоте
-                  S21_deg_MF): # Градус на центральной частоте
-            
-            self.Number = Number;
-            self.CellList = CellList;
-            self.CascadeList = CascadeList;
-            self.P1dB = P1dB;
-            self.S11_dB = S11_dB;
-            self.S22_dB = S22_dB;
-            self.S21_dB = S21_dB;
-            self.S11_dB_Max = S11_dB_Max;
-            self.S22_dB_Max = S22_dB_Max;
-            self.S21_dB_MF = S21_dB_MF;
-            self.S21_deg_MF = S21_deg_MF;
+                  S21_deg_MF, # Градус на центральной частоте)
+                  CombinationOrder);
+
+
+
+State0 = GetState(54,54);
 
 
 print('шовашыовшаоышвоа   ышоа');
