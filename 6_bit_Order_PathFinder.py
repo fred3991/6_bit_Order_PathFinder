@@ -16,9 +16,15 @@ import os
 
 
 
+###### Подготовильтельный блок
+#list_of_files = os.listdir("dsa_almaz_s2p_file"); # директория
+#CellPath = os.listdir("dsa_almaz_s2p_file");
+
 ##### Подготовильтельный блок
-list_of_files = os.listdir("dsa_almaz_s2p_file"); # директория
-CellPath = os.listdir("dsa_almaz_s2p_file");
+list_of_files = os.listdir("to Vuchich"); # директория
+CellPath = os.listdir("to Vuchich");
+
+
 Num_Of_Bits=int(len(list_of_files)/2); # Определили число битов в комбинации;
 #Создаем таблицу истинности
 # Лист битов ['Bit0', 'Bit1', 'Bit2', 'Bit3', 'Bit4', 'Bit5']
@@ -34,6 +40,33 @@ number_of_states = 2**Num_Of_Bits;  ## число состояний
 Cell_Name_List = [];
 Cell_P1dB_List = [];
 Cell_Truth_List = [];
+################################
+PhaseStep = 360/(2**Num_Of_Bits);
+NormalPhaseList= [];
+for state in range(number_of_states):
+    Phase = state*PhaseStep;
+    NormalPhaseList.append(Phase);
+#####################################
+NormasAttenuationList = [];
+AttenuationStep = -0.5;
+for state in range(number_of_states):
+    Attenuation = state*AttenuationStep;
+    NormasAttenuationList.append(Attenuation);
+################################################
+################################################
+S11_User = -15;
+S22_User = -15;
+RMS_S21_deg_DSA_User = 7;
+RMS_S21_dB_DSA_User = 0.5;
+Min_P1dB_User = 12;
+###################################################
+
+
+
+
+
+
+
 
 for i in range(len(list_of_files)):
     Split_String =  list_of_files[i].split("_");
@@ -71,7 +104,8 @@ def GetCells(CellPath):  # Создание всех ячееек
         CellValue = Cell_Name_List[i];
         P1dB = Cell_P1dB_List[i];
         ON_OFF = Cell_Truth_List[i];
-        Network = rf.Network('dsa_almaz_s2p_file/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
+        #Network = rf.Network('dsa_almaz_s2p_file/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
+        Network = rf.Network('to Vuchich/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
 
         Frequency = Network.f.tolist(); # лист частот
         S21_dB = [];
@@ -189,7 +223,7 @@ def GetState(StateNumber, PermutaionNumber):
         S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
         S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
 
-        print('waiting');
+        #print('waiting');
     
     S11_dB_Max = max(S11_dB);
     S22_dB_Max = max(S22_dB);
@@ -197,41 +231,9 @@ def GetState(StateNumber, PermutaionNumber):
     S21_dB_MF  = S21_dB[MF]; # выбор индекса на центральной частотте
     S21_deg_MF = S21_deg[MF]
 
-    P1dB_Value_List = [];  # лист значений для данной комбинации
-    S21_Value_List  = []; 
+   
+    P1dB = GetP1dBCascade(CellList);  # обернул в функцию
 
-    for c in range(len(CellList)):
-        P1dB_Value_List.append(CellList[c].P1dB);
-        S21_Value_List.append(CellList[c].Cell_S21_MF_dB);
-    
-    #Cчитаем тотал P1dB
-    #Переводим п1дб и s21 в разы;
-    P1dB_Value_List_R = [];
-    S21_Value_List_R = [];
-    for i in range(len(P1dB_Value_List)):
-        P1dB_Value_List_R.append(10**(float(P1dB_Value_List[i])/10));
-        S21_Value_List_R.append(10**(float(S21_Value_List[i])/10));
-    ###Дальше считаем
-    #Делаем цикл по значением в листе P1dB_Value_List_R а для S21_Value_List_R -1
-    SummList = [];
-    GainFactArray = [];
-    first = 1/float(P1dB_Value_List_R[0]); # Всегда
-    
-
-    GainMult = float(1); # временная переменная
-    
-    for x in range(len(S21_Value_List_R)-1):
-        Gain = float(S21_Value_List_R[x]); #Cейчас
-        GainMult = GainMult*Gain;       # следующая
-        GainFactArray.append(GainMult);
-        
-    SuperSumma = 0;
-    for cascade in range(1,len(P1dB_Value_List)-1):
-        SuperSumma = SuperSumma + (GainFactArray[cascade-1]/P1dB_Value_List_R[cascade]);
-
-    P1dBTotal = (SuperSumma+first)**(-1);
-    P1dBTotal = 10*math.log10(P1dBTotal);
-    P1dB = P1dBTotal;
     
     return State(Number, CellList, CascadeList, 
                   P1dB,  # точка сжатия для данного состояния при каскадном включении
@@ -247,27 +249,352 @@ def GetState(StateNumber, PermutaionNumber):
                   S21_deg_MF, # Градус на центральной частоте)
                   CombinationOrder);
 
+def GetP1dBCascade(CellList):
+    P1dB_Value_List = [];  # лист значений для данной комбинации
+    S21_Value_List  = []; 
+
+    for c in range(len(CellList)):
+        P1dB_Value_List.append(CellList[c].P1dB);
+        S21_Value_List.append(CellList[c].Cell_S21_MF_dB);
+ 
+    #Cчитаем тотал P1dB
+    #Переводим п1дб и s21 в разы;
+    P1dB_Value_List_R = [];
+    S21_Value_List_R = [];
+    for i in range(len(P1dB_Value_List)):
+        P1dB_Value_List_R.append(10**(float(P1dB_Value_List[i])/10));
+        S21_Value_List_R.append(10**(float(S21_Value_List[i])/10));
+    ###Дальше считаем
+    #Делаем цикл по значением в листе P1dB_Value_List_R а для S21_Value_List_R -1
+    SummList = [];
+    GainFactArray = [];
+
+    first = 1/float(P1dB_Value_List_R[0]); # Всегда
+    GainMult = float(1); # временная переменная
+    
+    for x in range(len(S21_Value_List_R)-1):
+        Gain = float(S21_Value_List_R[x]); #Cейчас
+        GainMult = GainMult*Gain;       # следующая
+        GainFactArray.append(GainMult);
+        
+    SuperSumma = 0;
+    for cascade in range(1,len(P1dB_Value_List)):
+        SuperSumma = SuperSumma + (GainFactArray[cascade-1]/P1dB_Value_List_R[cascade]);
+
+    P1dBTotal = (SuperSumma+first)**(-1);
+    P1dBTotal = 10*math.log10(P1dBTotal);
+    P1dB = P1dBTotal;
+
+    return P1dB;
 
 
-State0 = GetState(54,54);
 
 
-print('шовашыовшаоышвоа   ышоа');
-#####################
+###Вроде все работает.
 
-
-
+##################### Делаем систему состояний
 
 
 
+class StateSystemDevice:
+     def __init__(self, CombinationOrder,
+
+                        List_Of_States,
+                        List_Of_Max_S11_dB,
+                        List_Of_Max_S22_dB,
+                        List_Of_MF_P1dB,
+
+
+                        List_Of_MF_S21_dB,
+                        List_Of_MF_S21_deg,
+                                                
+                        Max_S11_dB,
+                        Max_S22_dB,
+                        Min_P1dB,
+                        
+                        RMS_S21_dB_DSA,
+                        RMS_S21_deg_DSA,
+
+                        RMS_S21_dB_PhSh,
+                        RMS_S21_deg_PhSh,
+                        
+                        FitnessValue_DSA,
+                        FitnessValue_PhSh): 
+            
+            self.CombinationOrder = CombinationOrder;   #Комбинация
+
+            self.List_Of_States = List_Of_States;   # лист непосредственно состояний
+            self.List_Of_Max_S11_dB = List_Of_Max_S11_dB;  # лист максимальных значений для всех состояний
+            self.List_Of_Max_S22_dB = List_Of_Max_S22_dB; # лист максимальных значений для всех состояний
+            self.List_Of_MF_P1dB = List_Of_MF_P1dB;      # лист П1дБ значений для всех состояний
+
+            self.List_Of_MF_S21_dB = List_Of_MF_S21_dB;   # Лист с21 дБ для расчета СКО
+            self.List_Of_MF_S21_deg = List_Of_MF_S21_deg;  # Лист с21 град для расчета СКО
+
+            self.Max_S11_dB = Max_S11_dB;                   #Выбор макисмального значения из листа List_Of_Max_S11_dB  - Для фитнесс функции
+            self.Max_S22_dB = Max_S22_dB;            #Выбор макисмального значения из листа List_Of_Max_S22_dB   - - Для фитнесс функции
+
+            self.Min_P1dB = Min_P1dB;               #Выбор минимального значения из листа List_Of_MF_P1dB;   -- Для фитнесс функции
+      
+            self.RMS_S21_dB_DSA = RMS_S21_dB_DSA;  # Ррасчет СКО по амплитуде для ЦАТТ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            self.RMS_S21_deg_DSA = RMS_S21_deg_DSA;  # Ррасчет СКО по градусам для ЦАТТ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            self.RMS_S21_dB_PhSh = RMS_S21_dB_PhSh;  # Расчет СКО по амплитуде для ФВ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            self.RMS_S21_deg_PhSh = RMS_S21_deg_PhSh;   # Ррасчет СКО по градусам для ФВ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            self.FitnessValue_DSA = FitnessValue_DSA;  # Расчте фитнесс функции для ЦАТТ
+            self.FitnessValue_PhSh = FitnessValue_PhSh;  # Расчте фитнесс функции для ФВ
+
+     
+
+
+def GetStateSystemDevice(Permutaion):
+
+    List_Of_States = [];  # лист непосредственно состояний
+
+    for i in range(number_of_states):  # по количеству состояний
+        TempState = GetState(i,Permutaion);
+        List_Of_States.append(TempState);
+    #####Наполнили лист 64 состояниями
+    List_Of_Max_S11_dB = []; # лист максимальных значений C11  для всех состояний
+    for i in range(number_of_states):
+        Current_Max_S11_dB = List_Of_States[i].S11_dB_Max;
+        List_Of_Max_S11_dB.append(Current_Max_S11_dB)
+    ##############################################################################
+    List_Of_Max_S22_dB = []; #лист максимальных значений C22  для всех состояний
+    for i in range(number_of_states):
+        Current_Max_S22_dB = List_Of_States[i].S22_dB_Max;
+        List_Of_Max_S22_dB.append(Current_Max_S22_dB);
+    ##########################################################################
+    List_Of_MF_P1dB = [];  # лист П1дБ значений для всех состояний
+    for i in range(number_of_states):
+        Current_P1dB = List_Of_States[i].P1dB;
+        List_Of_MF_P1dB.append(Current_P1dB);
+    #########################################################################
+    List_Of_MF_S21_dB = [];   # Лист с21 дБ для расчета СКО
+    for i in range(number_of_states):
+        Current_MF_S21_dB = List_Of_States[i].S21_dB_MF;
+        List_Of_MF_S21_dB.append(Current_MF_S21_dB);
+    ########################################################################
+    List_Of_MF_S21_deg = [];  # Лист с21 град для расчета СКО
+    for i in range(number_of_states):
+        Current_MF_S21_deg = List_Of_States[i].S21_deg_MF;
+        List_Of_MF_S21_deg.append(Current_MF_S21_deg);
+    ########################################################################
+    ########################################################################
+
+    Max_S11_dB = max(List_Of_Max_S11_dB); #Выбор макисмального значения из листа List_Of_Max_S11_dB  - Для фитнесс функции
+    Max_S22_dB = max(List_Of_Max_S22_dB);  #Выбор макисмального значения из листа List_Of_Max_S22_dB   - - Для фитнесс функции
+
+    #Min_P1dB = min(List_Of_MF_P1dB);  # В опорном Выбор минимального значения из листа List_Of_MF_P1dB;   -- Для фитнесс функции
+    Min_P1dB = List_Of_MF_P1dB[0];  # В опроном только
+
+    List_Of_IP1dB = List_Of_MF_P1dB;
+    List_of_OP1dB = [];
+    for i in range(number_of_states):
+        Current_OP1dB = List_Of_IP1dB[i]+((List_Of_MF_S21_dB[i])-1);
+        List_of_OP1dB.append(Current_OP1dB);
+    
+    #######################
+    #######################
+    RMS_S21_dB_DSA = Get_RMS_S21_dB_DSA(List_Of_MF_S21_dB);  # Расчет СКО по амплитуде для ЦАТТ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+    RMS_S21_deg_DSA = Get_RMS_S21_deg_DSA(List_Of_MF_S21_deg); # Ррасчет СКО по градусам для ЦАТТ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+    RMS_S21_dB_PhSh = Get_RMS_S21_dB_PhSh(List_Of_MF_S21_dB);
+    RMS_S21_deg_PhSh = Get_RMS_S21_deg_PhSh(List_Of_MF_S21_deg);
+
+    FitnessValue_DSA = Get_FitnessValue_DSA(Max_S11_dB,Max_S22_dB, RMS_S21_dB_DSA, RMS_S21_deg_DSA, Min_P1dB);
+
+    FitnessValue_PhSh = 0;
+    ########################
+    ########################
+    ########################
+    CombinationOrder = List_Of_States[0].CombinationOrder;
+    print('Permuation ready '+str(Permutaion));
+
+    return StateSystemDevice( CombinationOrder,   #Комбинация
+
+            List_Of_States,   # лист непосредственно состояний
+            List_Of_Max_S11_dB,  # лист максимальных значений для всех состояний
+            List_Of_Max_S22_dB, # лист максимальных значений для всех состояний
+            List_Of_MF_P1dB,   # лист П1дБ значений для всех состояний
+
+            List_Of_MF_S21_dB,   # Лист с21 дБ для расчета СКО
+            List_Of_MF_S21_deg,  # Лист с21 град для расчета СКО
+
+            Max_S11_dB,                  #Выбор макисмального значения из листа List_Of_Max_S11_dB  - Для фитнесс функции
+            Max_S22_dB,            #Выбор макисмального значения из листа List_Of_Max_S22_dB   - - Для фитнесс функции
+
+            Min_P1dB,               #Выбор минимального значения из листа List_Of_MF_P1dB;   -- Для фитнесс функции
+      
+            RMS_S21_dB_DSA,  # Ррасчет СКО по амплитуде для ЦАТТ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            RMS_S21_deg_DSA,  # Ррасчет СКО по градусам для ЦАТТ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            RMS_S21_dB_PhSh,  # Расчет СКО по амплитуде для ФВ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            RMS_S21_deg_PhSh,   # Ррасчет СКО по градусам для ФВ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            FitnessValue_DSA,  # Расчте фитнесс функции для ЦАТТ
+            FitnessValue_PhSh)  # Расчте фитнесс функции для ФВ);
+
+
+
+
+
+def Get_RMS_S21_dB_DSA(List_Of_MF_S21_dB):
+  
+    #считаем RMS амплитуды
+    Ref_List_S21 = [];  # нормированный лист ослабления
+    for state_is in range(number_of_states): 
+        Ref_List_S21.append(List_Of_MF_S21_dB[state_is]-List_Of_MF_S21_dB[0]);  # нормируем ослабление
+
+    ErrorList = [];
+    for i in range(number_of_states):     
+        ErrorList.append(Ref_List_S21[i] - NormasAttenuationList[i]);
+    #cреднее значение ошибки
+    MeanErrorS21dB = statistics.mean(ErrorList)    
+    #лист суммы для 
+    SumList=[];
+    for sum_i in range(number_of_states):
+        i_element = pow((ErrorList[sum_i]-MeanErrorS21dB),2);
+        SumList.append(i_element);
+    Sum_up = np.sum(SumList);
+    RMS_S21_dB_DSA = np.sqrt(Sum_up/(number_of_states-1));
+
+    return RMS_S21_dB_DSA;
+
+
+
+def Get_RMS_S21_deg_DSA(List_Of_MF_S21_deg):
+
+    MeanS21Deg = statistics.mean(List_Of_MF_S21_deg);
+    SumListDeg=[];
+    for i in range(number_of_states):
+        i_element = pow((List_Of_MF_S21_deg[i]-MeanS21Deg),2);
+        SumListDeg.append(i_element);
+    Sum_up_Deg = np.sum(SumListDeg);
+    RMS_S21_deg_DSA = np.sqrt(Sum_up_Deg/(number_of_states));
+    
+    return RMS_S21_deg_DSA;
+
+def Get_RMS_S21_deg_PhSh(List_Of_MF_S21_deg):
+
+    #считаем RMS фазы
+    PhaseList = [];
+    for state_is in range(number_of_states):
+        PhaseList.append(List_Of_MF_S21_deg[state_is]-List_Of_MF_S21_deg[0]); # нормированный лист фазы
+    #Unwrap        
+    PhaseList = np.deg2rad(PhaseList);
+    PhaseList = np.unwrap(PhaseList);
+    PhaseList = np.rad2deg(PhaseList);
+    #Set Unwrap to StateList
+    #for unwrap_state in range(0,64,1):
+        #StateList[unwrap_state].StatePhase=PhaseList[unwrap_state];
+    #Делаем лист ошибки
+    ErrorList = [];
+    for i in range(0,64,1):     
+        ErrorList.append(PhaseList[i] - NormalPhaseList[i]);
+    #cреднее значение ошибки
+    MeanErrorPhase = statistics.mean(ErrorList)    
+    #лист суммы для 
+    SumList=[];
+    for sum_i in range(0,64,1):
+        i_element = pow((ErrorList[sum_i]-MeanErrorPhase),2);
+        SumList.append(i_element);
+    Sum_up = np.sum(SumList)
+    RMS_S21_deg_PhSh = np.sqrt(Sum_up/(len(SumList)-1));
+
+    return RMS_S21_deg_PhSh;
+
+
+
+def Get_RMS_S21_dB_PhSh(List_Of_MF_S21_dB):
+  
+    S21List = List_Of_MF_S21_dB;
+
+    MeanS21 = statistics.mean(S21List);
+    SumList=[];
+    for i in range(0,64,1):
+        i_element = pow((S21List[i]-MeanS21),2);
+        SumList.append(i_element);
+    Sum_up = np.sum(SumList);
+    RMS_S21_dB_PhSh = np.sqrt(Sum_up/(len(SumList)-1));
+
+    return RMS_S21_dB_PhSh;
+###################################################################################
 
 
 
 
 
 
+def Get_FitnessValue_DSA(Max_S11_dB,Max_S22_dB, RMS_S21_dB_DSA, RMS_S21_deg_DSA, Min_P1dB):
+    
+    Max_S11_dB = Max_S11_dB;
+
+    if abs(S11_User)>abs(Max_S11_dB):
+        S11_Fit = (abs(S11_User)-abs(Max_S11_dB))*1.333333;
+    else:
+        S11_Fit = 0;
+
+    Max_S22_dB = Max_S22_dB;
+
+    if abs(S22_User)>abs(Max_S22_dB):
+        S22_Fit = (abs(S22_User)-abs(Max_S22_dB))*1.333333;
+    else:
+        S22_Fit = 0;
+
+    
+    RMS_S21_deg_DSA = RMS_S21_deg_DSA;
+
+    if abs(RMS_S21_deg_DSA)>abs(RMS_S21_deg_DSA_User):
+        RMS_S21_deg_DSA_Fit = (abs(RMS_S21_deg_DSA)-abs(RMS_S21_deg_DSA_User))*6.66666666;
+    else:
+        RMS_S21_deg_DSA_Fit = 0;
 
 
+
+    RMS_S21_dB_DSA = RMS_S21_dB_DSA;
+
+    if abs(RMS_S21_dB_DSA)>abs(RMS_S21_dB_DSA_User):
+
+        RMS_S21_dB_DSA_Fit = (abs(RMS_S21_dB_DSA)-abs(RMS_S21_dB_DSA_User))*76.923;
+    else:
+        RMS_S21_dB_DSA_Fit = 0;
+
+
+    Min_P1dB_Fit = 0;
+
+    if abs(Min_P1dB_User)>abs(Min_P1dB):
+
+        Min_P1dB_Fit = (abs(Min_P1dB_User)-abs(Min_P1dB))*2;
+    else:
+        Min_P1dB_Fit = 0;
+    
+
+    FitnessValue_DSA = S11_Fit #+ S22_Fit + RMS_S21_deg_DSA_Fit + RMS_S21_dB_DSA_Fit + Min_P1dB_Fit;
+
+    return FitnessValue_DSA;
+     
+
+
+
+##################################
+
+#BruteForce = [];
+#for i in range(0,720,1):
+#    BruteForce.append(GetStateSystemDevice(i))
+
+#pickle.dump(BruteForce, open('PHASE_SHIFTER_BruteForce_S11.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
+
+
+BruteForce =  pickle.load(open('PHASE_SHIFTER_BruteForce_S11.pkl', 'rb'));
+
+BruteForce = sorted(BruteForce, key = lambda StateSystemDevice: StateSystemDevice.Max_S22_dB);
+
+
+for i in range(0,720,1):
+    print(BruteForce[i].Max_S22_dB)
+print('sho')
 
 
 
