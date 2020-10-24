@@ -202,7 +202,7 @@ def GetState(StateNumber, PermutaionNumber):
  
 
     Number = StateNumber; # номер состояния
-    Network = rf.cascade_list(Cascade_permutations[PermutaionNumber]);  # Берем все данные оттуда из собранного каскада
+    Network = rf.cascade_list(Cascade_permutations[PermutaionNumber]);  # Берем все данные оттуда из собранного каска да
     
     Frequency = Network.f.tolist(); # лист частот
 
