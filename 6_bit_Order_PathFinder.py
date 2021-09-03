@@ -14,8 +14,8 @@ import os
 
 
 ###### Подготовильтельный блок
-list_of_files = os.listdir("dsa_almaz_s2p_file"); # директория
-CellPath = os.listdir("dsa_almaz_s2p_file");
+list_of_files = os.listdir("ps_2021"); # директория
+CellPath = os.listdir("ps_2021");
 
 Num_Of_Bits=int(len(list_of_files)/2); # Определили число битов в комбинации;
 #Создаем таблицу истинности
@@ -96,7 +96,7 @@ def GetCells(CellPath):  # Создание всех ячееек
         CellValue = Cell_Name_List[i];
         P1dB = Cell_P1dB_List[i];
         ON_OFF = Cell_Truth_List[i];
-        Network = rf.Network('dsa_almaz_s2p_file/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
+        Network = rf.Network('ps_2021/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
         #Network = rf.Network('to Vuchich/'+str(CellValue)+'_'+str(P1dB)+'_'+str(ON_OFF)+'.S2P');
 
         Frequency = Network.f.tolist(); # лист частот
@@ -230,7 +230,8 @@ def GetP1dBCascade(CellList):
 
     for c in range(len(CellList)):
         P1dB_Value_List.append(CellList[c].P1dB);
-        S21_Value_List.append(CellList[c].Cell_S21_MF_dB);
+        #S21_Value_List.append(CellList[c].Cell_S21_MF_dB);
+        S21_Value_List.append(CellList[c].Cell_S21_MF_dB-1);
  
     #Cчитаем тотал P1dB
     #Переводим п1дб и s21 в разы;
@@ -275,7 +276,6 @@ class StateSystemDevice:
                         List_Of_Max_S11_dB,
                         List_Of_Max_S22_dB,
                         List_Of_MF_P1dB,
-
 
                         List_Of_MF_S21_dB,
                         List_Of_MF_S21_deg,
@@ -348,8 +348,7 @@ def GetStateSystemDevice(Permutaion):
         List_Of_MF_P1dB.append(Current_P1dB);
         List_Of_MF_S21_dB.append(Current_MF_S21_dB);
         List_Of_MF_S21_deg.append(Current_MF_S21_deg);
-    ##############################################################################
-        
+    ########################################################################      
     ########################################################################
     ########################################################################
 
@@ -460,13 +459,13 @@ def Get_RMS_S21_deg_PhSh(List_Of_MF_S21_deg):
         #StateList[unwrap_state].StatePhase=PhaseList[unwrap_state];
     #Делаем лист ошибки
     ErrorList = [];
-    for i in range(0,64,1):     
+    for i in range(0,number_of_states,1):     
         ErrorList.append(PhaseList[i] - NormalPhaseList[i]);
     #cреднее значение ошибки
     MeanErrorPhase = statistics.mean(ErrorList)    
     #лист суммы для 
     SumList=[];
-    for sum_i in range(0,64,1):
+    for sum_i in range(0,number_of_states,1):
         i_element = pow((ErrorList[sum_i]-MeanErrorPhase),2);
         SumList.append(i_element);
     Sum_up = np.sum(SumList)
@@ -482,7 +481,7 @@ def Get_RMS_S21_dB_PhSh(List_Of_MF_S21_dB):
 
     MeanS21 = statistics.mean(S21List);
     SumList=[];
-    for i in range(0,64,1):
+    for i in range(0,number_of_states,1):
         i_element = pow((S21List[i]-MeanS21),2);
         SumList.append(i_element);
     Sum_up = np.sum(SumList);
@@ -490,10 +489,6 @@ def Get_RMS_S21_dB_PhSh(List_Of_MF_S21_dB):
 
     return RMS_S21_dB_PhSh;
 ###################################################################################
-
-
-
-
 
 
 def Get_FitnessValue_DSA(Max_S11_dB,Max_S22_dB, RMS_S21_dB_DSA, RMS_S21_deg_DSA, Min_P1dB):
@@ -549,122 +544,187 @@ def Get_FitnessValue_DSA(Max_S11_dB,Max_S22_dB, RMS_S21_dB_DSA, RMS_S21_deg_DSA,
 #############################################################
 
 
+#Combination = [3,1,4,5,6,7,2,8];  ## 8!Комбинация ферзей и перестановки
+##Combination[0]  - C0
+## h(C0) =  fitness - описывает качество перестановки - количество ферзей под ударом
+#h_C0 = statistics.mean(Combination);
+#T0 = 100;  # температура
 
-
-
-
-def GetStateAnnealing(StateNumber):  ### Меняет рандомно 2 позиции ячеек
-
-    CellList, CascadeList= GetStateData(StateNumber);  ## получили данные для состояния
-    Cascade = CascadeList;
-
-    Cascade_permutations = list(itertools.permutations(Cascade, len(BitList))); # 720 лист этих каскадов - 1 обьект листа это лист с 6 ячейками он же будет одинаково выдавать если состояние не менял??
-    Cell_Permutaitions = list(itertools.permutations(CellList, len(BitList)))  # 720 состояний ячеек, отсюда можно взять последовательность
-    
-    Cascade_permutations[0]
-    Cascade_permutations[0]; # Первая перестановка, в ней поменять рандомно
-    
-    CombinationOrder = [];
-    for i in range(len(CellList)):
-        CombinationOrder.append(Cell_Permutaitions[PermutaionNumber][i].CellValue);
-    Number = StateNumber; # номер состояния
-    
-    Network = rf.cascade_list(Cascade_permutations[PermutaionNumber]);  # Берем все данные оттуда из собранного каска да
-
-    Frequency = Network.f.tolist(); # лист частот
-    S11_dB = [];   ### точки в по частотам
-    S22_dB = [];
-    S21_dB = [];
-    S21_deg = [];
-    for f in range(len(Frequency)):
-        S11_dB.append(float(Network.s11[str(Frequency[f])+'hz'].s_db[...]));
-        S21_dB.append(float(Network.s21[str(Frequency[f])+'hz'].s_db[...]));
-        S22_dB.append(float(Network.s22[str(Frequency[f])+'hz'].s_db[...]));
-        S21_deg.append(float(Network.s21[str(Frequency[f])+'hz'].s_deg[...]))
-        #print('waiting');
-    S11_dB_Max = max(S11_dB);
-    S22_dB_Max = max(S22_dB);
-    MF = math.ceil(len(Frequency)/2);  # центральная ччастотта
-    S21_dB_MF  = S21_dB[MF]; # выбор индекса на центральной частотте
-    S21_deg_MF = S21_deg[MF]
-    P1dB = GetP1dBCascade(CellList);  # обернул в функцию
-    return State(Number, CellList, CascadeList, 
-                  P1dB,  # точка сжатия для данного состояния при каскадном включении       
-                  S11_dB,  # лист значений
-                  S22_dB,  # /-/-/-/-/-/-/-
-                  S21_dB,  # /-/-/-/-/-/-/-
-                  S21_deg, # /-/-/-/-/-/-/-
-                  S11_dB_Max, # максимальное значение из списка частот
-                  S22_dB_Max, # максимальное значение из списка частот
-                  S21_dB_MF, # дБ на центральной частоте
-                  S21_deg_MF, # Градус на центральной частоте)
-                  CombinationOrder);
-
-
-
+## T0 = 100, C0,
+##  k = 0;
+##2. Ck+1 = через функцию перестановки,  def(Combination)
+## [3 -- 6]  одна перестановка!!!
+## Tk = T0+1 = a*Tk
+## а = 0...1; 0.95
+## dH = H(cK+1) - H(cK)
+## if dh =0 break
+## dH<0, new Combinationt = Ck+1  следущая перестановка
+## dH>=0 расчитать веростноть p(dH) = exp(-dH/Tk) 
+## c этой вероятностью принять за исходную комбинацию предыдущю и 
+## c нее вернуть новую комбинацию. 1-ph() - взять новоую
 
 ############################################################
 #################################################################
 
+def GetStateSystemDevice(Permutaion):
+
+    List_Of_States = [];  # лист непосредственно состояний
+
+    for i in range(number_of_states):  # по количеству состояний
+        TempState = GetState(i,Permutaion);
+        List_Of_States.append(TempState);
+
+    #####Наполнили лист 64 состояниями
+    List_Of_Max_S11_dB = []; # лист максимальных значений C11  для всех состояний
+    List_Of_Max_S22_dB = []; #лист максимальных значений C22  для всех состояний
+    List_Of_MF_P1dB = [];  # лист П1дБ значений для всех состояний
+    List_Of_MF_S21_dB = [];   # Лист с21 дБ для расчета СКО
+    List_Of_MF_S21_deg = [];  # Лист с21 град для расчета СКО
+
+
+    for i in range(number_of_states):
+        Current_Max_S11_dB = List_Of_States[i].S11_dB_Max;
+        Current_Max_S22_dB = List_Of_States[i].S22_dB_Max;
+        Current_P1dB = List_Of_States[i].P1dB;
+        Current_MF_S21_dB = List_Of_States[i].S21_dB_MF;
+        Current_MF_S21_deg = List_Of_States[i].S21_deg_MF;
+
+        List_Of_Max_S11_dB.append(Current_Max_S11_dB)
+        List_Of_Max_S22_dB.append(Current_Max_S22_dB);
+        List_Of_MF_P1dB.append(Current_P1dB);
+        List_Of_MF_S21_dB.append(Current_MF_S21_dB);
+        List_Of_MF_S21_deg.append(Current_MF_S21_deg);
+    ########################################################################      
+    ########################################################################
+    ########################################################################
+
+    Max_S11_dB = max(List_Of_Max_S11_dB); #Выбор макисмального значения из листа List_Of_Max_S11_dB  - Для фитнесс функции
+    Max_S22_dB = max(List_Of_Max_S22_dB);  #Выбор макисмального значения из листа List_Of_Max_S22_dB   - - Для фитнесс функции
+
+    #Min_P1dB = min(List_Of_MF_P1dB);  # В опорном Выбор минимального значения из листа List_Of_MF_P1dB;   -- Для фитнесс функции
+    Min_P1dB = List_Of_MF_P1dB[0];  # В опроном только
+
+    List_Of_IP1dB = List_Of_MF_P1dB;
+    List_of_OP1dB = [];
+    for i in range(number_of_states):
+        Current_OP1dB = List_Of_IP1dB[i]+((List_Of_MF_S21_dB[i])-1);
+        List_of_OP1dB.append(Current_OP1dB);
+    
+    #######################
+    #######################
+    RMS_S21_dB_DSA = Get_RMS_S21_dB_DSA(List_Of_MF_S21_dB);  # Расчет СКО по амплитуде для ЦАТТ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+    RMS_S21_deg_DSA = Get_RMS_S21_deg_DSA(List_Of_MF_S21_deg); # Ррасчет СКО по градусам для ЦАТТ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+    RMS_S21_dB_PhSh = Get_RMS_S21_dB_PhSh(List_Of_MF_S21_dB);
+    RMS_S21_deg_PhSh = Get_RMS_S21_deg_PhSh(List_Of_MF_S21_deg);
+
+    FitnessValue_DSA = Get_FitnessValue_DSA(Max_S11_dB,Max_S22_dB, RMS_S21_dB_DSA, RMS_S21_deg_DSA, Min_P1dB);
+    FitnessValue_PhSh = 0;
+    ########################
+    ########################
+    ########################
+    CombinationOrder = List_Of_States[0].CombinationOrder;
+    print('Permuation ready '+str(Permutaion));
+
+    return StateSystemDevice( CombinationOrder,   #Комбинация
+
+            List_Of_States,   # лист непосредственно состояний
+            List_Of_Max_S11_dB,  # лист максимальных значений для всех состояний
+            List_Of_Max_S22_dB, # лист максимальных значений для всех состояний
+            List_Of_MF_P1dB,   # лист П1дБ значений для всех состояний
+
+            List_Of_MF_S21_dB,   # Лист с21 дБ для расчета СКО
+            List_Of_MF_S21_deg,  # Лист с21 град для расчета СКО
+
+            Max_S11_dB,                  #Выбор макисмального значения из листа List_Of_Max_S11_dB  - Для фитнесс функции
+            Max_S22_dB,            #Выбор макисмального значения из листа List_Of_Max_S22_dB   - - Для фитнесс функции
+
+            Min_P1dB,               #Выбор минимального значения из листа List_Of_MF_P1dB;   -- Для фитнесс функции
+      
+            RMS_S21_dB_DSA,  # Ррасчет СКО по амплитуде для ЦАТТ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            RMS_S21_deg_DSA,  # Ррасчет СКО по градусам для ЦАТТ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            RMS_S21_dB_PhSh,  # Расчет СКО по амплитуде для ФВ из листа List_Of_MF_S21_dB  -- Для фитнесс функции
+            RMS_S21_deg_PhSh,   # Ррасчет СКО по градусам для ФВ из листа List_Of_MF_S21_deg -- Для фитнесс функции
+
+            FitnessValue_DSA,  # Расчте фитнесс функции для ЦАТТ
+            FitnessValue_PhSh)  # Расчте фитнесс функции для ФВ);
 
 #####################################################################
 
 
 
-#BruteForce = [];
-#for i in range(0,3,1):
-#    BruteForce.append(GetStateSystemDevice(i))
+Permutation = math.factorial(Num_Of_Bits);
 
-#pickle.dump(BruteForce, open('DSA_BruteForce_1.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
+BruteForce = [];
+for i in range(0,Permutation,1):
+    BruteForce.append(GetStateSystemDevice(i))
 
-#BruteForce =  pickle.load(open('BruteForce_S11.pkl', 'rb'));
+pickle.dump(BruteForce, open('PS_P1dB_Test.pkl', 'wb'), protocol=pickle.HIGHEST_PROTOCOL);
 
-#BruteForce = sorted(BruteForce, key = lambda StateSystemDevice: StateSystemDevice.Max_S11_dB);
 
-#Sorted_Brute = [];
+BruteForce =  pickle.load(open('PS_P1dB_Test.pkl', 'rb'));
+BruteForce = sorted(BruteForce, key = lambda StateSystemDevice: StateSystemDevice.Max_S11_dB);
 
-#Level = -7.2
-#RMS = 0.54
+
+
+import xlsxwriter
+workbook = xlsxwriter.Workbook('2021_PS_P1dB_Test.xlsx');
+
+worksheet = workbook.add_worksheet();
+worksheet.write(0, 0, 'Сombination');
+worksheet.write(0, 1, 'Max_S11_dB');
+worksheet.write(0, 2, 'Max_S22_dB');
+worksheet.write(0, 3, 'RMS_S21_dB_DSA');
+worksheet.write(0, 4, 'RMS_S21_deg_DSA');
+worksheet.write(0, 5, 'RMS_S21_dB_PhSh');
+worksheet.write(0, 6, 'RMS_S21_deg_PhSh');
+worksheet.write(0, 7, 'P1dB');
+
+for data in range(len(BruteForce)):  
+    row = data+1;   
+    worksheet.write(row, 0, str(BruteForce[data].CombinationOrder));
+    worksheet.write(row, 1, BruteForce[data].Max_S11_dB);
+    worksheet.write(row, 2, BruteForce[data].Max_S22_dB);
+    worksheet.write(row, 3, BruteForce[data].RMS_S21_dB_DSA);
+    worksheet.write(row, 4, BruteForce[data].RMS_S21_deg_DSA);
+    worksheet.write(row, 5, BruteForce[data].RMS_S21_dB_PhSh);
+    worksheet.write(row, 6, BruteForce[data].RMS_S21_deg_PhSh);
+    worksheet.write(row, 7, BruteForce[data].Min_P1dB);    
+workbook.close()
+
+#List_S22_Max = [];
+#List_S11_Max = [];
+#List_S21 = [];
+
 
 #for i in range(len(BruteForce)):
-#    if (BruteForce[i].Max_S11_dB<Level and BruteForce[i].Max_S22_dB<Level and BruteForce[i].RMS_S21_dB_DSA<RMS):
-#        Sorted_Brute.append(BruteForce[i])
-#    else:
-#        continue;
-
-#Sorted_Brute = sorted(Sorted_Brute, key = lambda StateSystemDevice: StateSystemDevice.RMS_S21_dB_DSA);
-
-#for i in range(len(Sorted_Brute)):
-#    print(Sorted_Brute[i].CombinationOrder)
-
-#for i in range(len(Sorted_Brute)):
-#    print(Sorted_Brute[i].RMS_S21_dB_DSA)
-#print('sho')
+#    List_S22_Max.append(BruteForce[i].Max_S22_dB);
+#    List_S11_Max.append(BruteForce[i].Max_S11_dB);
+#    List_S21.append(BruteForce[i].List_Of_MF_S21_dB[0]);
 
 
-#import xlsxwriter
-#workbook = xlsxwriter.Workbook('Nik_Vuchich_Hello_For_DSA.xlsx');
 
-#worksheet = workbook.add_worksheet();
-#worksheet.write(0, 0, 'Сombination');
-#worksheet.write(0, 1, 'Max_S11_dB');
-#worksheet.write(0, 2, 'Max_S22_dB');
-#worksheet.write(0, 3, 'RMS_S21_dB_DSA');
-#worksheet.write(0, 4, 'RMS_S21_deg_DSA');
-#worksheet.write(0, 5, 'RMS_S21_dB_PhSh');
-#worksheet.write(0, 6, 'RMS_S21_deg_PhSh');
+#x = np.arange(0,720,1);
+#y1 = List_S22_Max;
+#y2 = List_S11_Max;
+#y3 = List_S21;
 
-#for data in range(len(BruteForce)):  
-#    row = data+1;   
-#    worksheet.write(row, 0, str(BruteForce[data].CombinationOrder));
-#    worksheet.write(row, 1, BruteForce[data].Max_S11_dB);
-#    worksheet.write(row, 2, BruteForce[data].Max_S22_dB);
-#    worksheet.write(row, 3, BruteForce[data].RMS_S21_dB_DSA);
-#    worksheet.write(row, 4, BruteForce[data].RMS_S21_deg_DSA);
-#    worksheet.write(row, 5, BruteForce[data].RMS_S21_dB_PhSh);
-#    worksheet.write(row, 6, BruteForce[data].RMS_S21_deg_PhSh);
-    
-#workbook.close()
+
+#plt.plot(x,y1);
+
+#plt.plot(x,y2);
+
+#plt.xlim(200,300)
+#plt.show();
+
+
+
+
+
+#print('sho');
+
+
 
 
 
